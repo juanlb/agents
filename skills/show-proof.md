@@ -64,11 +64,21 @@ When relevant, verify from MULTIPLE vantage points (e.g., DB + cache + UI all ag
 ### Initialize
 
 ```bash
-mkdir -p show-proof
-uvx showboat init show-proof/YYYYMMDD-short-description.md "Title"
+PROOF_DIR="show-proof/YYYYMMDD-short-description"
+mkdir -p "$PROOF_DIR" show-proof/assets
+REPO_NAME=$(basename "$(git remote get-url origin)" .git)
+uvx showboat init "$PROOF_DIR/proof.md" "$REPO_NAME — task description"
 ```
 
-Use today's date and a kebab-case summary.
+Use today's date and a kebab-case summary for the directory name. The title must be `repo-name — task description` (no "Proof of Work" — it's implicit on the viewer). Derive the repo name from `git remote get-url origin`.
+
+### Record current branch
+
+Immediately after init, record the working branch as the first entry:
+
+```bash
+uvx showboat exec "$PROOF_DIR/proof.md" bash "git branch --show-current"
+```
 
 ### Assemble content
 
@@ -90,11 +100,11 @@ Tips:
 rodney start                          # launch headless Chrome
 rodney open "http://localhost:PORT"   # navigate
 rodney waitload                       # wait for page load
-rodney screenshot -w 1440 -h 400 screenshots/name.png
+rodney screenshot -w 1440 -h 400 show-proof/assets/name.png
 rodney stop                           # clean up when done
 ```
 
-Create `screenshots/` directory first: `mkdir -p screenshots`
+The `show-proof/assets/` directory is created during init. Store all raw screenshots there.
 
 **Login**: inspect form with `rodney html 'form'`, then use `rodney input` and `rodney click`. If those time out (common with number inputs or offscreen elements), fall back to JS:
 
@@ -124,6 +134,14 @@ This is not production. Leave the system in its post-action state — that IS th
 End with a summary note — a table or bullet list mapping each phase to what was verified and the result.
 
 The document is NOT expected to pass `showboat verify` — it captures a stateful before/after sequence. The value is the captured evidence, not reproducibility.
+
+## Gitignore
+
+Ensure `show-proof/` is in the project's `.gitignore`. Proof documents are transmitted to the external viewer — local files don't need to be tracked.
+
+```bash
+grep -qxF 'show-proof/' .gitignore 2>/dev/null || echo 'show-proof/' >> .gitignore
+```
 
 ## Quality checklist
 

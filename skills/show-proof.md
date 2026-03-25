@@ -6,7 +6,33 @@ Create a behavioral verification document that proves completed work through liv
 
 Git diff shows what changed. Proof shows what works. A human reviewer should read the document and be convinced the feature/fix works without running anything themselves.
 
-## Step 0: Learn the tools
+## Step 0: Ensure tooling is available
+
+### Check for uvx
+
+Before using any `uvx` commands, verify it is installed:
+
+```bash
+command -v uvx >/dev/null 2>&1 || { curl -Ls https://astral.sh/uv/install.sh | sh; }
+```
+
+### Check for SHOWBOAT_REMOTE_URL
+
+Before running any `showboat` command, check if the `SHOWBOAT_REMOTE_URL` environment variable is set:
+
+```bash
+echo "${SHOWBOAT_REMOTE_URL:-NOT_SET}"
+```
+
+If it is **not set**, ask the user for the value. Once obtained, prefix every `uvx showboat` invocation with the variable so documents are sent to the external server:
+
+```bash
+SHOWBOAT_REMOTE_URL=<value> uvx showboat <command>
+```
+
+If it **is set**, use `uvx showboat <command>` normally — the variable is already in the environment.
+
+### Learn the tools
 
 Run both of these first — their help output is the complete API reference, written for agents:
 
@@ -19,7 +45,7 @@ uvx rodney --help
 
 Before building the proof, determine what's available:
 
-1. **What was built/fixed?** Read git log, diff, and understand the change.
+1. **What was built/fixed?** Read recent changes and understand the work done. If in a git repo, use git log/diff; otherwise, review the relevant files directly.
 2. **What proves it works?** Think about observable effects:
    - Database values changing?
    - Cache keys appearing or being invalidated?
@@ -66,18 +92,22 @@ When relevant, verify from MULTIPLE vantage points (e.g., DB + cache + UI all ag
 ```bash
 PROOF_DIR="show-proof/YYYYMMDD-short-description"
 mkdir -p "$PROOF_DIR" show-proof/assets
-REPO_NAME=$(basename "$(git remote get-url origin)" .git)
-uvx showboat init "$PROOF_DIR/proof.md" "$REPO_NAME — task description"
+PROJECT_NAME=$(basename "$PWD")
+uvx showboat init "$PROOF_DIR/proof.md" "$PROJECT_NAME — task description"
 ```
 
-Use today's date and a kebab-case summary for the directory name. The title must be `repo-name — task description` (no "Proof of Work" — it's implicit on the viewer). Derive the repo name from `git remote get-url origin`.
+Use today's date and a kebab-case summary for the directory name. The title must be `project-name — task description` (no "Proof of Work" — it's implicit on the viewer). Derive the project name from the current directory name.
 
-### Record current branch
+### Record context
 
-Immediately after init, record the working branch as the first entry:
+Immediately after init, record the working context as the first entry. If inside a git repo, record the current branch:
 
 ```bash
-uvx showboat exec "$PROOF_DIR/proof.md" bash "git branch --show-current"
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  uvx showboat exec "$PROOF_DIR/proof.md" bash "git branch --show-current"
+else
+  uvx showboat note "$PROOF_DIR/proof.md" "Working directory: $PWD"
+fi
 ```
 
 ### Assemble content
@@ -137,10 +167,13 @@ The document is NOT expected to pass `showboat verify` — it captures a statefu
 
 ## Gitignore
 
-Ensure `show-proof/` is in the project's `.gitignore`. Proof documents are transmitted to the external viewer — local files don't need to be tracked.
+If the project is a git repo, ensure `show-proof/` and `.rodney/` are in `.gitignore`. Proof documents are transmitted to the external viewer — local files don't need to be tracked. Rodney may create a `.rodney/` directory for its working state.
 
 ```bash
-grep -qxF 'show-proof/' .gitignore 2>/dev/null || echo 'show-proof/' >> .gitignore
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  grep -qxF 'show-proof/' .gitignore 2>/dev/null || echo 'show-proof/' >> .gitignore
+  grep -qxF '.rodney/' .gitignore 2>/dev/null || echo '.rodney/' >> .gitignore
+fi
 ```
 
 ## Quality checklist

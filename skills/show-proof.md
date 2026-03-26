@@ -87,6 +87,8 @@ When relevant, verify from MULTIPLE vantage points (e.g., DB + cache + UI all ag
 
 ## Step 3: Build the document
 
+**IMPORTANT: NEVER edit proof.md directly.** Do not use file editors, redirections, `sed`, `cat >`, or any other method to modify the proof document. ALL changes to proof.md MUST go through `uvx showboat` commands (`init`, `note`, `exec`, `image`, `pop`). Showboat manages the document format and syncs with the remote server — direct edits will corrupt both.
+
 ### Initialize
 
 ```bash

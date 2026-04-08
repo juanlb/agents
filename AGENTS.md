@@ -16,4 +16,4 @@ Reusable task instructions located in the `skills/` folder.
 
 | Skill | Description | Path |
 |-------|-------------|------|
-| show-proof | Create a live proof-of-work document that verifies completed work through observable behavior (before/action/after). Uses `showboat` for document assembly and `rodney` for browser automation. | `skills/show-proof.md` |
+| show-proof | Create a live proof-of-work document that verifies completed work through observable behavior (before/action/after). Uses `showboat` for document assembly, `rodney` for browser automation, and `mmdc` for Mermaid diagrams. | `skills/show-proof.md` |

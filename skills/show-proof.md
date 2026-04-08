@@ -147,6 +147,23 @@ rodney js "(function(){ let setter = Object.getOwnPropertyDescriptor(window.HTML
 To submit: `rodney js "(function(){ document.querySelector('form').submit(); return 'ok'; })()"`
 To scroll: `rodney js "(function(){ document.querySelector('#el').scrollIntoView({block:'center'}); return 'ok'; })()"`
 
+### Mermaid charts (when a diagram helps)
+
+When a diagram would clarify the work — architecture, flow, sequence, state transitions, data model — generate a Mermaid chart and embed it as an image. Use any chart type the situation calls for (flowchart, sequenceDiagram, stateDiagram, erDiagram, classDiagram, etc.).
+
+Write the Mermaid source to a `.mmd` file inside `show-proof/assets/`, render it to a `.png` with `mmdc`, then embed the PNG with `showboat image`:
+
+```bash
+cat > show-proof/assets/diagram-name.mmd <<'EOF'
+flowchart LR
+  A[Before] --> B[Action] --> C[After]
+EOF
+npx -p @mermaid-js/mermaid-cli mmdc -i show-proof/assets/diagram-name.mmd -o show-proof/assets/diagram-name.png
+uvx showboat image "$PROOF_DIR/proof.md" '![diagram description](show-proof/assets/diagram-name.png)'
+```
+
+Both the `.mmd` source and the rendered `.png` live under `show-proof/assets/`, which is already covered by the `show-proof/` gitignore entry — so nothing extra needs to be tracked or ignored.
+
 ### Docker compose patterns (when available)
 
 ```bash
